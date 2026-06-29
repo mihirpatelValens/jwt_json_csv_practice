@@ -15,14 +15,15 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.example.demo.filter.JWTAuthenticationFilter;
+import com.example.demo.filter.JWTValidationFilter;
 import com.example.demo.utils.JWTUtil;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private JWTUtil jwtUtil;
-    private UserDetailsService userDetailsService;
+    private final JWTUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
 
     public SecurityConfig(JWTUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
@@ -31,7 +32,8 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
@@ -42,40 +44,54 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JWTAuthenticationFilter jwtAuthenticationFilter(AuthenticationManager authenticationManager,
-            JWTUtil jwtUtil) {
-        return new JWTAuthenticationFilter(authenticationManager, jwtUtil);
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationConfiguration config)
-            throws Exception {
-
-        System.out.println("Coming to security filter chain");
-        JWTAuthenticationFilter jwtAuthFilter = new JWTAuthenticationFilter(authenticationManager(config), jwtUtil);
-
-        http.authorizeHttpRequests(
-                auth -> auth.requestMatchers("/api/user-register", "/h2-console/**", "/find").permitAll().anyRequest()
-                        .authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/user-register"))
-                .headers(headers -> headers.frameOptions((frame -> frame.disable())));
-                // .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        // .csrf(csrf -> csrf.disable());
-
-        http.addFilterBefore(jwtAuthenticationFilter(authenticationManager(config), jwtUtil),
-                     UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
-
-    // @Bean
-    // public AuthenticationManager authenticationManager() {
-    // return new ProviderManager(Arrays.asList(daoAuthenticationProvider()));
-    // }
-
-    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   AuthenticationConfiguration config) throws Exception {
+
+        AuthenticationManager authManager = authenticationManager(config);
+
+        JWTAuthenticationFilter authenticationFilter =
+                new JWTAuthenticationFilter(authManager, jwtUtil);
+
+        JWTValidationFilter validationFilter =
+                new JWTValidationFilter(jwtUtil, userDetailsService);
+
+        http
+                .authorizeHttpRequests(auth -> auth
+                        // Public endpoints — no token needed
+                        .requestMatchers(
+                                "/api/generate-token",
+                                "/api/user-register",
+                                "/api/find",
+                                "/h2-console/**"
+                        ).permitAll()
+                        // Everything else requires a valid JWT
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(
+                                "/api/generate-token",
+                                "/api/user-register",
+                                "/api/find",
+                                "/h2-console/**"
+                        )
+                )
+                .headers(headers ->
+                        headers.frameOptions(frame -> frame.disable()) // needed for H2 console
+                )
+                .authenticationProvider(daoAuthenticationProvider())
+                // 1. JWTAuthenticationFilter — handles login, issues token
+                // 2. JWTValidationFilter — validates token on protected routes
+                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(validationFilter, JWTAuthenticationFilter.class);
+
+        return http.build();
+    }
 }
