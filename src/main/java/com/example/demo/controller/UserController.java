@@ -49,4 +49,10 @@ public class UserController {
         return "Fetched user Detail Successfully";
     }
 
+    @PostMapping("/generate-token")
+    public String postMethodName(@RequestBody String entity) {
+        return "User Registor successfully";
+    }
+    
+
 }
