@@ -22,79 +22,79 @@ import com.example.demo.utils.JWTUtil;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JWTUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
+  private final JWTUtil jwtUtil;
+  private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(JWTUtil jwtUtil, UserDetailsService userDetailsService) {
-        this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
-    }
+  public SecurityConfig(JWTUtil jwtUtil, UserDetailsService userDetailsService) {
+    this.jwtUtil = jwtUtil;
+    this.userDetailsService = userDetailsService;
+  }
 
-    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
+  @Bean
+  public DaoAuthenticationProvider daoAuthenticationProvider() {
+    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    provider.setUserDetailsService(userDetailsService);
+    provider.setPasswordEncoder(passwordEncoder());
+    return provider;
+  }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+  @Bean
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    return config.getAuthenticationManager();
+  }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   AuthenticationConfiguration config) throws Exception {
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                 AuthenticationConfiguration config) throws Exception {
 
-        AuthenticationManager authManager = authenticationManager(config);
+    AuthenticationManager authManager = authenticationManager(config);
 
-        JWTAuthenticationFilter authenticationFilter =
-                new JWTAuthenticationFilter(authManager, jwtUtil);
+    JWTAuthenticationFilter authenticationFilter =
+            new JWTAuthenticationFilter(authManager, jwtUtil);
 
-        JWTValidationFilter validationFilter =
-                new JWTValidationFilter(jwtUtil, userDetailsService);
+    JWTValidationFilter validationFilter =
+            new JWTValidationFilter(jwtUtil, userDetailsService);
 
-        System.out.println("Security Filter Chain");
-        http
-                .authorizeHttpRequests(auth -> auth
-                        // Public endpoints — no token needed
-                        .requestMatchers(
-                                "/api/generate-token",
-                                "/api/user-register",
-                                "/api/find",
-                                "/h2-console/**",
-                                "/api/json/upload"
-                        ).permitAll()
-                        // Everything else requires a valid JWT
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(
-                                "/api/generate-token",
-                                "/api/user-register",
-                                "/api/find",
-                                "/h2-console/**",
-                                "/api/json/upload"
-                        )
-                )
-                .headers(headers ->
-                        headers.frameOptions(frame -> frame.disable()) // needed for H2 console
-                )
-                .authenticationProvider(daoAuthenticationProvider())
-                // 1. JWTAuthenticationFilter — handles login, issues token
-                // 2. JWTValidationFilter — validates token on protected routes
-                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(validationFilter, JWTAuthenticationFilter.class);
+    System.out.println("Security Filter Chain");
+    http
+            .authorizeHttpRequests(auth -> auth
+                    // Public endpoints — no token needed
+                    .requestMatchers(
+                            "/api/generate-token",
+                            "/api/user-register",
+                            "/api/find",
+                            "/h2-console/**",
+                            "/api/file/json/upload"
+                    ).permitAll()
+                    // Everything else requires a valid JWT
+                    .anyRequest().authenticated()
+            )
+            .sessionManagement(session ->
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .csrf(csrf -> csrf
+                    .ignoringRequestMatchers(
+                            "/api/generate-token",
+                            "/api/user-register",
+                            "/api/find",
+                            "/h2-console/**",
+                            "/api/file/json/upload"
+                    )
+            )
+            .headers(headers ->
+                    headers.frameOptions(frame -> frame.disable()) // needed for H2 console
+            )
+            .authenticationProvider(daoAuthenticationProvider())
+            // 1. JWTAuthenticationFilter — handles login, issues token
+            // 2. JWTValidationFilter — validates token on protected routes
+            .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(validationFilter, JWTAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+  }
 }

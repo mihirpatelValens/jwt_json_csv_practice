@@ -3,7 +3,6 @@ package com.example.demo.service;
 import com.example.demo.dto.JsonMetaData;
 import com.example.demo.entity.JsonMetaDataEntity;
 import com.example.demo.repository.JsonMetadataRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,56 +22,63 @@ import java.util.UUID;
 @Service
 public class FileService {
 
-    private final Path rootPath;
+  private final Path rootPath;
 
-    private final JsonMetadataRepository jsonMetadataRepository;
+  private final JsonMetadataRepository jsonMetadataRepository;
 
-    public FileService(JsonMetadataRepository jsonMetadataRepository) {
-      this.jsonMetadataRepository = jsonMetadataRepository;
-        this.rootPath = Paths.get("./files");
+  public FileService(JsonMetadataRepository jsonMetadataRepository) {
+    this.jsonMetadataRepository = jsonMetadataRepository;
+    this.rootPath = Paths.get("./files");
+  }
+
+  public JsonMetaDataEntity uploadJson(MultipartFile file, String name) throws IOException {
+    System.out.println(name);
+
+    String storedFilePath;
+    try (InputStream inputStream = file.getInputStream()) {
+      storedFilePath = storeFile(inputStream, file.getOriginalFilename());
     }
 
-    public JsonMetaDataEntity uploadJson(MultipartFile file, String name) throws IOException {
-        System.out.println(name);
+    JsonMetaDataEntity fileMetaData = new JsonMetaDataEntity();
+    fileMetaData.setFileName(file.getOriginalFilename());
+    fileMetaData.setMimeType(file.getContentType());
+    fileMetaData.setSize(file.getSize());
+    fileMetaData.setStorePath(storedFilePath);
+    fileMetaData.setCreatedAt(LocalDateTime.now());
+    JsonMetaDataEntity res = jsonMetadataRepository.save(fileMetaData);
+    return res;
+  }
 
-        String storedFileName;
-        try(InputStream inputStream = file.getInputStream()){
-            storedFileName = storeFile(inputStream,file.getOriginalFilename());
-        }
-        JsonMetaData metaData = new JsonMetaData(file.getOriginalFilename(),file.getContentType(),file.getSize(), LocalDateTime.now(),storedFileName);
+  public void jsonToCsv(Long id) throws IOException {
+    JsonMetaDataEntity metaDataEntity = jsonMetadataRepository.findById(id).orElse(null);
 
-        JsonMetaDataEntity fileMetaData = new JsonMetaDataEntity();
-      fileMetaData.setFileName(file.getOriginalFilename());
-      fileMetaData.setMimeType(file.getContentType());
-      fileMetaData.setSize(file.getSize());
-      fileMetaData.setStorePath(storedFileName);
-      fileMetaData.setCreatedAt(LocalDateTime.now());
-      JsonMetaDataEntity res = jsonMetadataRepository.save(fileMetaData);
-        return res;
+    if (metaDataEntity == null) {
+      throw new IllegalArgumentException("Id not found");
     }
 
-    private String storeFile(InputStream inputStream, String fileName) throws IOException {
-      LocalDate today = LocalDate.now();
+    System.out.println(metaDataEntity.getFileName() + " " + metaDataEntity.getStorePath());
 
-      Path fileDirectory = rootPath.resolve(
-              today.getYear() + File.separator + String.format("%02d", today.getMonthValue())
-      );
-      Files.createDirectories(fileDirectory);
+  }
 
-      if (!fileName.endsWith(".json")) {
-        throw new IllegalArgumentException("Invalid file type, only .json files are allowed.");
-      }
+  private String storeFile(InputStream inputStream, String fileName) throws IOException {
+    LocalDate today = LocalDate.now();
 
-      String storedFileName = UUID.randomUUID().toString() + "_" + fileName;
-      Path filePath = fileDirectory.resolve(storedFileName);
+    Path fileDirectory = rootPath.resolve(
+            today.getYear() + File.separator + String.format("%02d", today.getMonthValue())
+    );
+    Files.createDirectories(fileDirectory);
 
-      try (OutputStream outputStream = Files.newOutputStream(filePath, StandardOpenOption.CREATE_NEW)) {
-        StreamUtils.copy(inputStream, outputStream);
-      }
-
-      System.out.println(filePath.toAbsolutePath().toString());
-      return rootPath.relativize(filePath).toString(); // return relative path
+    if (!fileName.endsWith(".json")) {
+      throw new IllegalArgumentException("Invalid file type, only .json files are allowed.");
     }
 
+    String storedFileName = UUID.randomUUID().toString() + "_" + fileName;
+    Path filePath = fileDirectory.resolve(storedFileName);
 
+    try (OutputStream outputStream = Files.newOutputStream(filePath, StandardOpenOption.CREATE_NEW)) {
+      StreamUtils.copy(inputStream, outputStream);
+    }
+
+    return filePath.toAbsolutePath().toString(); // return relative path
+  }
 }

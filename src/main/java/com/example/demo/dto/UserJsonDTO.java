@@ -13,24 +13,24 @@ import java.util.List;
 @Getter
 @Setter
 public class UserJsonDTO {
-    @NotBlank
-    private String username;
+  @NotBlank
+  private String username;
 
-    @Min(1)
-    private int age;
+  @Min(1)
+  private int age;
 
-    @Email
-    private String email;
+  @Email
+  private String email;
 
-    @NotBlank
-    private String department;
+  @NotBlank
+  private String department;
 
-    @NotBlank
-    private String organization;
+  @NotBlank
+  private String organization;
 
-    @NotEmpty
-    private List<String> projects;
+  @NotEmpty
+  private List<String> projects;
 
-    @Valid
-    private AddressDTO address;
+  @Valid
+  private AddressDTO address;
 }

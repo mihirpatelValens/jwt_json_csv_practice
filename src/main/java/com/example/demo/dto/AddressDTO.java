@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AddressDTO {
-    private String houseNo;
-    private String street;
-    private String city;
+  private String houseNo;
+  private String street;
+  private String city;
 }
