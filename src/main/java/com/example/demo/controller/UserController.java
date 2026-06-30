@@ -54,6 +54,12 @@ public class UserController {
         return ResponseEntity.ok(new LoginResponseDTO(null, null, "Handled by filter"));
     }
 
+    @PostMapping("check")
+    public String checkingPostMethod(){
+        System.out.println("Pose reqest come");
+        return "check";
+    }
+
     // ── Protected Endpoints ───────────────────────────────────────────────────
 
     @GetMapping

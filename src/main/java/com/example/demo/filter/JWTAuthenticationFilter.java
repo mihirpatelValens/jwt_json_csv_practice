@@ -33,6 +33,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        System.out.println("Come to Authentication Filter");
+
         // This filter only handles the login/token-generation endpoint
         if (!request.getRequestURI().equals("/api/generate-token")
                 || !request.getMethod().equals("POST")) {

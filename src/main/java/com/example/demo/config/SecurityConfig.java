@@ -60,6 +60,7 @@ public class SecurityConfig {
         JWTValidationFilter validationFilter =
                 new JWTValidationFilter(jwtUtil, userDetailsService);
 
+        System.out.println("Security Filter Chain");
         http
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints — no token needed
@@ -67,7 +68,8 @@ public class SecurityConfig {
                                 "/api/generate-token",
                                 "/api/user-register",
                                 "/api/find",
-                                "/h2-console/**"
+                                "/h2-console/**",
+                                "/api/json/upload"
                         ).permitAll()
                         // Everything else requires a valid JWT
                         .anyRequest().authenticated()
@@ -80,7 +82,8 @@ public class SecurityConfig {
                                 "/api/generate-token",
                                 "/api/user-register",
                                 "/api/find",
-                                "/h2-console/**"
+                                "/h2-console/**",
+                                "/api/json/upload"
                         )
                 )
                 .headers(headers ->

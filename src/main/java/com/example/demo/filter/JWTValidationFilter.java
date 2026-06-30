@@ -26,18 +26,19 @@ public class JWTValidationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-
+        System.out.println("Validating JWT Token");
         String requestURI = request.getRequestURI();
 
         // Skip validation for public endpoints — let them pass straight through
         if (requestURI.equals("/api/generate-token")
                 || requestURI.equals("/api/user-register")
-                || requestURI.startsWith("/h2-console")) {
+                || requestURI.startsWith("/h2-console") || requestURI.startsWith("/api/json/upload")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -72,7 +73,7 @@ public class JWTValidationFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()
                         );
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 // Put authentication into the SecurityContext for this request
                 SecurityContextHolder.getContext().setAuthentication(authToken);
