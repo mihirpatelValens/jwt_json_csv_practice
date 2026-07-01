@@ -1,0 +1,2 @@
+username,age,email,department,organization,projects[0],projects[1],address.houseNo,address.street
+john_doe,10,john.doe@example.com,Engineering,TechCorp,Project Alpha,Project Beta,123,Main Street

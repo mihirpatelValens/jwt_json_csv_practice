@@ -154,4 +154,32 @@ public class GlobalExceptionHandler {
                         request.getRequestURI()
                 ));
     }
+
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<ErrorResponseDTO> handleFileStorage(
+            FileStorageException ex,
+            HttpServletRequest request) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponseDTO(
+                        ex.getMessage(),
+                        HttpStatus.BAD_REQUEST.value(),
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(FileNotFoundForUserException.class)
+    public ResponseEntity<ErrorResponseDTO> handleFileNotFoundForUser(
+            FileNotFoundForUserException ex,
+            HttpServletRequest request) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponseDTO(
+                        ex.getMessage(),
+                        HttpStatus.NOT_FOUND.value(),
+                        request.getRequestURI()
+                ));
+    }
 }

@@ -1,0 +1,12 @@
+{
+  "username": "john_doe",
+  "age": 10,
+  "email": "john.doe@example.com",
+  "department": "Engineering",
+  "organization": "TechCorp",
+  "projects": ["Project Alpha", "Project Beta"],
+  "address": {
+    "houseNo": "123",
+    "street": "Main Street"
+  }
+}

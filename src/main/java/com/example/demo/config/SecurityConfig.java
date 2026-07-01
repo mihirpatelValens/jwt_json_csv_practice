@@ -7,6 +7,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -68,8 +69,8 @@ public class SecurityConfig {
                             "/api/generate-token",
                             "/api/user-register",
                             "/api/find",
-                            "/h2-console/**",
-                            "/api/file/json/upload"
+                            "/h2-console/**"
+//                            "/api/file/json/upload"
                     ).permitAll()
                     // Everything else requires a valid JWT
                     .anyRequest().authenticated()
@@ -77,15 +78,16 @@ public class SecurityConfig {
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .csrf(csrf -> csrf
-                    .ignoringRequestMatchers(
-                            "/api/generate-token",
-                            "/api/user-register",
-                            "/api/find",
-                            "/h2-console/**",
-                            "/api/file/json/upload"
-                    )
-            )
+//            .csrf(csrf -> csrf
+//                    .ignoringRequestMatchers(
+//                            "/api/generate-token",
+//                            "/api/user-register",
+//                            "/api/find",
+//                            "/h2-console/**",
+//                            "/api/file/json/upload"
+//                    )
+//            )
+            .csrf(AbstractHttpConfigurer::disable)
             .headers(headers ->
                     headers.frameOptions(frame -> frame.disable()) // needed for H2 console
             )

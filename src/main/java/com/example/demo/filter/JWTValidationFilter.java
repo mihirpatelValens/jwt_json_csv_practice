@@ -38,7 +38,9 @@ public class JWTValidationFilter extends OncePerRequestFilter {
     // Skip validation for public endpoints — let them pass straight through
     if (requestURI.equals("/api/generate-token")
             || requestURI.equals("/api/user-register")
-            || requestURI.startsWith("/h2-console") || requestURI.startsWith("/api/file/json/upload")) {
+            || requestURI.startsWith("/h2-console")
+//            || requestURI.startsWith("/api/file/json/upload")
+    ) {
       filterChain.doFilter(request, response);
       return;
     }
